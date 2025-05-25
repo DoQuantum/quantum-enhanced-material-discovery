@@ -1,0 +1,83 @@
+Log file opened: dbt_sto-3g_8e8o_20250524-002228_run.log at 20250524-002228
+--- Script starting with PennyLane version: 0.41.1 ---
+Run configured for basis set: sto-3g
+Active space: 8 electrons in 8 orbitals.
+VQE iterations: 300
+Output is being logged to this file: dbt_sto-3g_8e8o_20250524-002228_run.log
+Timestamp: 20250524-002228
+
+--- Starting Full Pipeline Step with PennyLane VQE using basis: sto-3g ---
+Molecule: dibenzothiophene.xyz
+Basis set: sto-3g
+Number of basis functions (MOs): 77
+
+SCF converged: True
+Total RHF Energy: -846.70638670 Hartrees
+
+--- Active Space Selection ---
+Full MOs: 77, Full Occupied MOs: 48
+Requested active orbitals: 8, Requested active electrons: 8
+Selected active space MO indices: [44, 45, 46, 47, 48, 49, 50, 51]
+Number of MOs in active space: 8
+HOMO index (0-based): 47, LUMO index (0-based): 48
+MO energies (Hartree) for active space: [-0.32388672 -0.28599394 -0.23456188 -0.21743122  0.21053341  0.2576417
+  0.27941433  0.32289636]
+Core MO indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43]
+Nuclear repulsion energy (used as E_offset for InteractionOperator): 795.24154567 Hartrees
+Shape of active one-electron integrals: (8, 8)
+Shape of active two-electron integrals (physicist's): (8, 8, 8, 8)
+
+--- Hamiltonian Construction (Active Space: 8 orbitals) ---
+Number of terms in Fermionic Hamiltonian: 4161
+Number of qubits for JW mapping: 16
+Number of terms in OpenFermion Qubit Hamiltonian (Jordan-Wigner): 849
+INFO: FermionOperator constant does not match QubitOperator constant (known OpenFermion JW behavior).
+
+--- Hamiltonian Generation Successful ---
+Target active space: 8 electrons in 8 spatial orbitals.
+Number of spin-orbitals / qubits: 16
+Nuclear Repulsion Energy (E_nuc_rep_actual): 795.24154567 Hartrees
+Constant in OpenFermion Qubit Hamiltonian (C_qubit_jw): 710.55469773 Hartrees
+
+--- Starting VQE Calculation (PennyLane runtime version: v0.41.1) ---
+
+Using 360 UCCSD parameters for optimization.
+Attempting to run VQE optimization with PennyLane...
+Iter  -1:  E = 726.77267886 Ha (Initial) | Best E: 726.77267886 Ha
+Iter   0:  E_before_step = 726.77267886 Ha | E_after_step = 716.34046350 Ha | Best E: 716.34046350 Ha
+Iter  19:  E_before_step = 625.49788575 Ha | E_after_step = 624.91757730 Ha | Best E: 624.91757730 Ha
+Iter  39:  E_before_step = 621.33415174 Ha | E_after_step = 621.25684672 Ha | Best E: 621.25684672 Ha
+Iter  59:  E_before_step = 620.86229670 Ha | E_after_step = 620.86028281 Ha | Best E: 620.86028281 Ha
+Iter  79:  E_before_step = 620.80001405 Ha | E_after_step = 620.80056696 Ha | Best E: 620.79986130 Ha
+Iter  99:  E_before_step = 620.79299024 Ha | E_after_step = 620.79312572 Ha | Best E: 620.79299024 Ha
+Iter 119:  E_before_step = 620.79172329 Ha | E_after_step = 620.79170921 Ha | Best E: 620.79170921 Ha
+Iter 139:  E_before_step = 620.79127440 Ha | E_after_step = 620.79125659 Ha | Best E: 620.79125659 Ha
+Iter 159:  E_before_step = 620.79099617 Ha | E_after_step = 620.79098482 Ha | Best E: 620.79098482 Ha
+Iter 179:  E_before_step = 620.79080075 Ha | E_after_step = 620.79079250 Ha | Best E: 620.79079250 Ha
+Iter 199:  E_before_step = 620.79065546 Ha | E_after_step = 620.79064920 Ha | Best E: 620.79064920 Ha
+Iter 219:  E_before_step = 620.79054461 Ha | E_after_step = 620.79053979 Ha | Best E: 620.79053979 Ha
+Iter 239:  E_before_step = 620.79310604 Ha | E_after_step = 620.79108439 Ha | Best E: 620.79051552 Ha
+Iter 259:  E_before_step = 620.79069746 Ha | E_after_step = 620.79088506 Ha | Best E: 620.79051552 Ha
+Iter 279:  E_before_step = 620.79210512 Ha | E_after_step = 620.79764575 Ha | Best E: 620.79050200 Ha
+Iter 299:  E_before_step = 620.79117980 Ha | E_after_step = 620.79130419 Ha | Best E: 620.79050200 Ha
+Iter 299:  E_before_step = 620.79117980 Ha | E_after_step = 620.79130419 Ha | Best E: 620.79050200 Ha (Optimization finished)
+
+Saved VQE energies (optimizer path) to dbt_sto-3g_8e8o_20250524-002231_energies.dat
+Saved convergence plot to dbt_sto-3g_8e8o_20250524-002231_convergence.png
+Final VQE Energy (raw value from PennyLane, best found): 620.79050200 Hartrees
+
+--- PennyLane VQE Calculation Complete ---
+
+--- Final VQE Energy Summary ---
+RHF Total Energy (PySCF): -846.70638670 Hartrees
+Nuclear Repulsion Energy (E_nuc_rep_actual): 795.24154567 Hartrees
+Core HF Electronic Energy (E_core_elec_hf): -1477.65750056 Hartrees
+VQE Eigenvalue of Qubit Hamiltonian (E_VQE_raw): 620.79050200 Hartrees
+Constant in Qubit Hamiltonian (C_qubit_jw): 710.55469773 Hartrees
+Active Space Electronic Ops Part from VQE (E_VQE_raw - C_qubit_jw): -89.76419572 Hartrees
+Final Total VQE Molecular Energy (E_nuc_rep + E_core_elec_hf + E_active_ops_part): -772.18015061 Hartrees
+VQE Correlation Energy (E_VQE_total - E_RHF_total): 74.52623609 Hartrees
+INFO: VQE total energy is higher than RHF total energy.
+
+--- Full Pipeline Step Completed for basis sto-3g ---
+All output logged to: dbt_sto-3g_8e8o_20250524-002228_run.log
