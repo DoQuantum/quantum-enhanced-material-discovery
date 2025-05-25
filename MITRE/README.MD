@@ -87,7 +87,6 @@ The main script for running simulations is [`src/run_pyscf_rhf.py`](/Users/omtai
 
 3.  **Outputs:**
     *   **Log files:** Detailed logs of the calculation process are saved to the `logs/` directory with names like `dbt_<basis>_<active_space>_<timestamp>_run.log`.
-    *   **Energy data:** VQE energy convergence data is saved to `.dat` files in `logs/`.
     *   **Convergence plots:** Plots of VQE energy convergence are saved as `.png` files in `logs/`.
 
 ## Key Libraries Used
