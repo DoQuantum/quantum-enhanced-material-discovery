@@ -36,7 +36,7 @@ def run_rhf_calculation_and_get_integrals(xyz_filepath, basis_set='sto-3g',
 
         mo_coeff = mf.mo_coeff 
         hcore_ao = mf.get_hcore() 
-        h1_mo_full = np.einsum('pi,pq,qj->ij', mo_coeff, hcore_ao, mo_coeff, optimize=True)
+        h1_mo_full = np.einsum('pi,pq,qj->ij', mo_coeff, hcore_ao, mo_coeff, optimize='optimal')
 
         eri_ao_chemists = mf._eri 
         if eri_ao_chemists is None: 
@@ -296,52 +296,62 @@ def run_vqe_pennylane(openfermion_qubit_op, num_active_electrons, num_active_spa
     num_uccsd_params = len(raw_s_excitations) + len(raw_d_excitations)
     if verbose: print(f"Total number of UCCSD parameters calculated (based on raw excitations): {num_uccsd_params}")
 
-    @qml.qnode(dev)
+    @qml.qnode(dev, interface="autograd", diff_method="parameter-shift")
     def cost_function(weights):
         qml.UCCSD(weights, wires=range(num_qubits), s_wires=s_wires, d_wires=d_wires, init_state=hf_state_config)
         return qml.expval(H_pennylane)
 
-    opt = qml.AdamOptimizer(stepsize=0.1) # Consider making stepsize configurable or trying other optimizers
-    params = pnp.random.normal(0, np.pi / 4, size=num_uccsd_params, requires_grad=True)
-
+    opt = qml.AdamOptimizer(stepsize=0.01, beta1=0.9, beta2=0.999)
+    params = pnp.random.normal(0, 0.1, size=num_uccsd_params, requires_grad=True)
+    
     print(f"\nUsing {num_uccsd_params} UCCSD parameters for optimization.")
     print("Attempting to run VQE optimization with PennyLane...")
     
-    energies_for_plot = [] 
+    energies_for_plot = []
+    current_energy = cost_function(params)
+    energies_for_plot.append(current_energy)
+    best_energy_so_far = current_energy
+    best_params = pnp.copy(params)
     
-    current_energy_after_step = cost_function(params)
-    energies_for_plot.append(current_energy_after_step) # Initial energy
-    best_energy_so_far = current_energy_after_step
-    # best_params_so_far = pnp.copy(params, requires_grad=False) # If you need to store best parameters
+    print(f"Iter {-1:3d}:  E = {current_energy:.8f} Ha (Initial) | Best E: {best_energy_so_far:.8f} Ha")
 
-    print(f"Iter {-1:3d}:  E = {current_energy_after_step:.8f} Ha (Initial) | Best E: {best_energy_so_far:.8f} Ha")
-
+    # convergence parameters
+    conv_window = 5
+    conv_threshold = 1e-6
+    no_improvement_count = 0
+    
     for it in range(max_iterations):
-        # params are updated in-place by opt.step_and_cost
-        # cost_before_step is the energy evaluated with params *before* this optimization step
-        params, cost_before_step = opt.step_and_cost(cost_function, params) 
+        gradients = qml.grad(cost_function)(params)
+        params = opt.apply_grad(gradients, params) # update params
         
-        energies_for_plot.append(cost_before_step) # Store energy *before* the step (consistent with old plotting)
-
-        current_energy_after_step = cost_function(params) # Energy with the *newly updated* params
-
-        if current_energy_after_step < best_energy_so_far:
-            best_energy_so_far = current_energy_after_step
-            # best_params_so_far = pnp.copy(params, requires_grad=False) # Update best params
-
-        if (it + 1) % 20 == 0 or it == 0: 
-            print(f"Iter {it:3d}:  E_before_step = {cost_before_step:.8f} Ha | E_after_step = {current_energy_after_step:.8f} Ha | Best E: {best_energy_so_far:.8f} Ha")
+        current_energy = cost_function(params)
+        energies_for_plot.append(current_energy)
         
-        if it == max_iterations - 1: # After the last step
-            # The last energy to complete the plot data, corresponding to the state after the final iteration
-            energies_for_plot.append(current_energy_after_step)
-            print(f"Iter {it:3d}:  E_before_step = {cost_before_step:.8f} Ha | E_after_step = {current_energy_after_step:.8f} Ha | Best E: {best_energy_so_far:.8f} Ha (Optimization finished)")
-
-    if max_iterations == 0: # Only initial energy was calculated
-        pass # best_energy_so_far is already initial_energy
-    elif not energies_for_plot: # Should not happen if max_iterations >=0
-         energies_for_plot.append(best_energy_so_far)
-
+        # update best energy and parameters only if improved
+        if current_energy < best_energy_so_far:
+            best_energy_so_far = current_energy
+            best_params = pnp.copy(params)
+            no_improvement_count = 0
+        else:
+            no_improvement_count += 1
+        
+        # optimize step size if no improvement for 5 iterations
+        if no_improvement_count >= 5:
+            opt.stepsize *= 0.95
+            no_improvement_count = 0    
+        
+        if (it + 1) % 20 == 0 or it == 0:
+            print(f"Iter {it:3d}:  E = {current_energy:.8f} Ha | Best E: {best_energy_so_far:.8f} Ha | Step size: {opt.stepsize:.6f}")
+        
+        # check convergence and if recent energies are stable
+        if len(energies_for_plot) >= conv_window:
+            recent_energies = energies_for_plot[-conv_window:]
+            if np.std(recent_energies) < conv_threshold and it > conv_window:
+                print(f"\nConverged at iteration {it} with energy std dev < {conv_threshold}")
+                break
+    
+    # restore best parameters from every iteration
+    params = best_params
 
     np.savetxt(energy_data_filename, np.array(energies_for_plot), header="Iteration Energy(Ha)") # Use unique filename
     print(f"\nSaved VQE energies (optimizer path) to {energy_data_filename}")
@@ -478,6 +488,7 @@ if __name__ == "__main__":
                         print("INFO: VQE total energy is higher than RHF total energy.")
                     else:
                         print("INFO: VQE total energy is lower than or equal to RHF total energy.")
+
             else:
                 print(f"\n--- Full Pipeline Step Failed for basis {current_basis_set} (Hamiltonian or Integral Generation Error) ---")
 
@@ -493,6 +504,4 @@ if __name__ == "__main__":
             sys.stdout = original_stdout # Reset stdout to its original value
             # The 'with open' statement ensures log_file is closed automatically.
 
-
-
-    print(f"Script execution finished. Full log available in: {log_filename}") # This print goes to the terminal    print(f"Script execution finished. Full log available in: {log_filename}") # This print goes to the terminal
+    print(f"Script execution finished. Full log available in: {log_filename}") # This print goes to the terminal
