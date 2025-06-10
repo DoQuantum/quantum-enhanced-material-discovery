@@ -125,6 +125,12 @@ def get_active_space_integrals(mf, h1_mo_full, h2_mo_full_phys, n_active_orbital
 
     return h1_active, h2_active_phys, e_offset_for_interaction_op, active_space_indices
 
+
+def real_float(x):
+    # Immediately unwrap ArrayBox → NumPy float, then cast to native float
+    return qml.math.unwrap(qml.math.real(x)).item()
+
+
 def run_rhf_get_integrals_qubit_hamiltonian(xyz_filepath, basis_set='sto-3g',
                                             n_active_orbitals_target=8, n_active_electrons_target=8):
     try:
@@ -198,15 +204,43 @@ def run_rhf_get_integrals_qubit_hamiltonian(xyz_filepath, basis_set='sto-3g',
         traceback.print_exc(file=sys.stdout) # Direct traceback to the current stdout (log file)
         return None, None, None, None, None, None, None, None
 
-def run_vqe_pennylane(openfermion_qubit_op, num_active_electrons, num_active_spatial_orbitals, basis_set_name, max_iterations=200, verbose=False): # Added basis_set_name
+def run_vqe_pennylane(openfermion_qubit_op, num_active_electrons, num_active_spatial_orbitals,
+                      basis_set_name, max_iterations=200, ansatz_type="uccsd", hea_layers=2,
+                      verbose=False):
+    """Run a VQE optimization in PennyLane.
+
+    Parameters
+    ----------
+    openfermion_qubit_op: QubitOperator
+        Hamiltonian expressed using OpenFermion.
+    num_active_electrons: int
+        Number of active electrons in the simulation.
+    num_active_spatial_orbitals: int
+        Number of active spatial orbitals.
+    basis_set_name: str
+        Label of the basis set (for filenames).
+    max_iterations: int
+        Number of optimization steps.
+    ansatz_type: str
+        Which ansatz to use ("uccsd", "hea", "basic", or "random").
+    hea_layers: int
+        Number of layers for hardware-efficient style ansatz circuits.
+    verbose: bool
+        If True, print additional debugging information.
+
+    Returns
+    -------
+    float
+        Final optimized energy in Hartree.
+    """
     print(f"\n--- Starting VQE Calculation (PennyLane runtime version: v{qml.__version__}) ---")
     num_qubits = 2 * num_active_spatial_orbitals
 
     # Generate timestamp for unique filenames
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     base_filename = f"dbt_{basis_set_name}_8e8o_{timestamp}"
-    energy_data_filename = f"logs/{base_filename}_energies.dat"
-    plot_filename = f"logs/{base_filename}_convergence.png"
+    energy_data_filename = f"../logs/{base_filename}_energies.dat"
+    plot_filename = f"../logs/{base_filename}_convergence.png"
 
     try:
         H_pennylane_imported = qml.import_operator(openfermion_qubit_op, format='openfermion')
@@ -266,45 +300,261 @@ def run_vqe_pennylane(openfermion_qubit_op, num_active_electrons, num_active_spa
     dev = qml.device("lightning.qubit", wires=num_qubits)
     hf_state_config = np.zeros(num_qubits, dtype=int)
     hf_state_config[:num_active_electrons] = 1
-    if verbose: print(f"Hartree-Fock state configuration (for init_state): {hf_state_config}")
-
-    if verbose: print(f"Generating excitations for {num_active_electrons} electrons in {num_qubits} spin-orbitals (using qml.qchem.excitations).")
-    raw_s_excitations, raw_d_excitations = qchem.excitations(electrons=num_active_electrons, orbitals=num_qubits, delta_sz=0)
-
     if verbose:
-        print(f"Generated {len(raw_s_excitations)} raw single excitations.")
-        if raw_s_excitations: print(f"  Format of first few raw single excitations: {raw_s_excitations[:3]}")
-        print(f"Generated {len(raw_d_excitations)} raw double excitations.")
-        if raw_d_excitations: print(f"  Format of first few raw double excitations: {raw_d_excitations[:3]}")
-    
-    s_wires, d_wires = qchem.excitations_to_wires(raw_s_excitations, raw_d_excitations)
-    if verbose:
-        print(f"Processed {len(s_wires)} single excitation wire-sets using excitations_to_wires.")
-        if s_wires: print(f"  Format of first few processed s_wires: {s_wires[:3]}")
-        print(f"Processed {len(d_wires)} double excitation wire-sets using excitations_to_wires.")
-        if d_wires: print(f"  Format of first few processed d_wires: {d_wires[:3]}")
+        print(f"Hartree-Fock state configuration (for init_state): {hf_state_config}")
 
-    if verbose:
-        print("\nInspecting the qml.UCCSD template that will be called:")
-        print(f"  qml.UCCSD module: {qml.UCCSD.__module__}")
-        print(f"  qml.UCCSD qualified name: {qml.UCCSD.__qualname__}")
-        try:
-            print(f"  File path for qml.UCCSD: {inspect.getfile(qml.UCCSD)}")
-            print(f"  Signature of qml.UCCSD.__init__: {inspect.signature(qml.UCCSD.__init__)}")
-        except Exception as e_inspect: print(f"  Could not get file/signature for qml.UCCSD: {e_inspect}")
+    ansatz_type = ansatz_type.lower()
+    if ansatz_type == "uccsd":
+        if verbose:
+            print(f"Generating excitations for {num_active_electrons} electrons in {num_qubits} spin-orbitals (using qml.qchem.excitations).")
+        raw_s_excitations, raw_d_excitations = qchem.excitations(electrons=num_active_electrons, orbitals=num_qubits, delta_sz=0)
 
-    num_uccsd_params = len(raw_s_excitations) + len(raw_d_excitations)
-    if verbose: print(f"Total number of UCCSD parameters calculated (based on raw excitations): {num_uccsd_params}")
+        if verbose:
+            print(f"Generated {len(raw_s_excitations)} raw single excitations.")
+            if raw_s_excitations:
+                print(f"  Format of first few raw single excitations: {raw_s_excitations[:3]}")
+            print(f"Generated {len(raw_d_excitations)} raw double excitations.")
+            if raw_d_excitations:
+                print(f"  Format of first few raw double excitations: {raw_d_excitations[:3]}")
 
-    @qml.qnode(dev)
-    def cost_function(weights):
-        qml.UCCSD(weights, wires=range(num_qubits), s_wires=s_wires, d_wires=d_wires, init_state=hf_state_config)
-        return qml.expval(H_pennylane)
+        s_wires, d_wires = qchem.excitations_to_wires(raw_s_excitations, raw_d_excitations)
+        if verbose:
+            print(f"Processed {len(s_wires)} single excitation wire-sets using excitations_to_wires.")
+            if s_wires:
+                print(f"  Format of first few processed s_wires: {s_wires[:3]}")
+            print(f"Processed {len(d_wires)} double excitation wire-sets using excitations_to_wires.")
+            if d_wires:
+                print(f"  Format of first few processed d_wires: {d_wires[:3]}")
 
-    opt = qml.AdamOptimizer(stepsize=0.1) # Consider making stepsize configurable or trying other optimizers
-    params = pnp.random.normal(0, np.pi / 4, size=num_uccsd_params, requires_grad=True)
+        if verbose:
+            print("\nInspecting the qml.UCCSD template that will be called:")
+            print(f"  qml.UCCSD module: {qml.UCCSD.__module__}")
+            print(f"  qml.UCCSD qualified name: {qml.UCCSD.__qualname__}")
+            try:
+                print(f"  File path for qml.UCCSD: {inspect.getfile(qml.UCCSD)}")
+                print(f"  Signature of qml.UCCSD.__init__: {inspect.signature(qml.UCCSD.__init__)}")
+            except Exception as e_inspect:
+                print(f"  Could not get file/signature for qml.UCCSD: {e_inspect}")
 
-    print(f"\nUsing {num_uccsd_params} UCCSD parameters for optimization.")
+        num_params = len(raw_s_excitations) + len(raw_d_excitations)
+        if verbose:
+            print(f"Total number of UCCSD parameters calculated (based on raw excitations): {num_params}")
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.UCCSD(weights, wires=range(num_qubits), s_wires=s_wires, d_wires=d_wires, init_state=hf_state_config)
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=num_params, requires_grad=True)
+        print(f"\nUsing {num_params} UCCSD parameters for optimization.")
+
+    elif ansatz_type == "hea":
+        if verbose:
+            print(f"Using hardware efficient ansatz with {hea_layers} layers.")
+        weight_shape = (hea_layers, num_qubits, 3)
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.BasisState(hf_state_config, wires=range(num_qubits))
+            qml.StronglyEntanglingLayers(weights, wires=range(num_qubits))
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing HEA parameter tensor shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "basic":
+        if verbose:
+            print(f"Using BasicEntanglerLayers with {hea_layers} layers.")
+        weight_shape = (hea_layers, num_qubits)
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.BasisState(hf_state_config, wires=range(num_qubits))
+            qml.BasicEntanglerLayers(weights, wires=range(num_qubits))
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing BasicEntanglerLayers weight shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "random":
+        if verbose:
+            print(f"Using RandomLayers with {hea_layers} layers.")
+        weight_shape = qml.RandomLayers.shape(hea_layers, num_qubits)
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.BasisState(hf_state_config, wires=range(num_qubits))
+            qml.RandomLayers(weights, wires=range(num_qubits))
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing RandomLayers weight shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "gucc":
+        if verbose:
+            print(f"Using GateFabric (GUCC) ansatz with {hea_layers} layers.")
+        weight_shape = qml.GateFabric.shape(n_layers=hea_layers, n_wires=num_qubits)
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.GateFabric(weights, wires=range(num_qubits), init_state=hf_state_config)
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing GateFabric weight shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "hva":
+        if verbose:
+            print(f"Using Hamiltonian Variational Ansatz with {hea_layers} layers.")
+        weight_shape = (hea_layers, 1 + num_qubits * 3)
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.BasisState(hf_state_config, wires=range(num_qubits))
+            for l in range(hea_layers):
+                gamma = real_float(weights[l, 0])
+                ent = weights[l, 1:].reshape(1, num_qubits, 3)
+                # qml.ApproxTimeEvolution(H_pennylane, gamma, 1, wires=range(num_qubits)) # Old line
+                qml.ApproxTimeEvolution(H_pennylane, gamma, 1) # Corrected line: removed wires argument
+                qml.StronglyEntanglingLayers(ent, wires=range(num_qubits))
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing HVA weight shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "adapt":
+        if verbose:
+            print(f"Using particle-conserving U2 layers (ADAPT-VQE style) with {hea_layers} layers.")
+        weight_shape = qml.ParticleConservingU2.shape(hea_layers, num_qubits)
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.ParticleConservingU2(weights, wires=range(num_qubits), init_state=hf_state_config)
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing ParticleConservingU2 weight shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "ala":
+        if verbose:
+            print(f"Using alternating-layer ansatz with {hea_layers} layers.")
+        weight_shape = (hea_layers, num_qubits, 3)
+        ranges = [1 if i % 2 == 0 else 2 for i in range(hea_layers)]
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.BasisState(hf_state_config, wires=range(num_qubits))
+            qml.StronglyEntanglingLayers(weights, wires=range(num_qubits), ranges=ranges)
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing alternating-layer weight shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "brickwork":
+        if verbose:
+            print(f"Using brickwork ansatz with {hea_layers} layers.")
+        weight_shape = (hea_layers, num_qubits)
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.BasisState(hf_state_config, wires=range(num_qubits))
+            for l in range(hea_layers):
+                for w_idx in range(num_qubits):
+                    qml.RY(weights[l, w_idx], wires=w_idx)
+                for i in range(0, num_qubits - 1, 2):
+                    qml.CNOT(wires=[i, i + 1])
+                for i in range(1, num_qubits - 1, 2):
+                    qml.CNOT(wires=[i, i + 1])
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing brickwork weight shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "qaoa":
+        if verbose:
+            print(f"Using QAOA-inspired ansatz with {hea_layers} layers.")
+        weight_shape = (hea_layers, 2)
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.BasisState(hf_state_config, wires=range(num_qubits))
+            for l in range(hea_layers):
+                # Ensure the time parameter is explicitly float
+                time_param = real_float(weights[l, 0])
+                qml.ApproxTimeEvolution(H_pennylane, time_param, 1)
+                for w_idx in range(num_qubits):
+                    # Ensure RX angle is explicitly float
+                    rx_angle = qml.math.real(weights[l, 1])
+                    qml.RX(rx_angle, wires=w_idx)
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing QAOA-inspired weight shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "topology":
+        if verbose:
+            print(f"Using topology-aware ansatz with {hea_layers} layers.")
+        weight_shape = (hea_layers, num_qubits, 3)
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.BasisState(hf_state_config, wires=range(num_qubits))
+            qml.StronglyEntanglingLayers(weights, wires=range(num_qubits), imprimitive=qml.CZ)
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing topology-aware weight shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "tensor":
+        if verbose:
+            print(f"Using tensor-network MPS ansatz with {hea_layers} blocks.")
+        n_blocks = qml.MPS.get_n_blocks(range(num_qubits), 2)
+        weight_shape = (n_blocks, 2)
+
+        def mps_block(weights, wires):
+            qml.CNOT(wires=[wires[0], wires[1]])
+            qml.RY(weights[0], wires=wires[0])
+            qml.RY(weights[1], wires=wires[1])
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.BasisState(hf_state_config, wires=range(num_qubits))
+            qml.MPS(range(num_qubits), 2, mps_block, n_params_block=2, template_weights=weights)
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing MPS weight shape {weight_shape} ({num_params} parameters).")
+
+    elif ansatz_type == "genetic":
+        if verbose:
+            print(f"Using simple genetic ansatz with {hea_layers} layers.")
+        weight_shape = (hea_layers, num_qubits)
+
+        @qml.qnode(dev)
+        def cost_function(weights):
+            qml.BasisState(hf_state_config, wires=range(num_qubits))
+            qml.BasicEntanglerLayers(weights, wires=range(num_qubits))
+            return qml.expval(H_pennylane)
+
+        params = pnp.random.normal(0, np.pi / 4, size=weight_shape, requires_grad=True)
+        num_params = params.size
+        print(f"\nUsing genetic ansatz parameter shape {weight_shape} ({num_params} parameters).")
+
+    else:
+        raise ValueError(f"Unknown ansatz type '{ansatz_type}'")
+
+    opt = qml.AdamOptimizer(stepsize=0.1)
     print("Attempting to run VQE optimization with PennyLane...")
     
     energies_for_plot = [] 
@@ -382,13 +632,13 @@ if __name__ == "__main__":
     xyz_file = "dibenzothiophene.xyz"
     num_active_orbitals_config = 8 
     num_active_electrons_config = 8 
-    vqe_iterations = 300 # You can adjust this
+    vqe_iterations = 100 # You can adjust this
 
     # --- Setup Log File ---
     # Create logs directory if it doesn't exist
-    os.makedirs("logs", exist_ok=True)
+    os.makedirs("../logs", exist_ok=True)
     timestamp_log = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    log_filename = f"logs/dbt_{current_basis_set}_8e8o_{timestamp_log}_run.log"
+    log_filename = f"..logs/dbt_{current_basis_set}_8e8o_{timestamp_log}_run.log"
     original_stdout = sys.stdout  # Save a reference to the original standard output
 
     # Ensure the log file is opened with 'utf-8' encoding for broader character support
