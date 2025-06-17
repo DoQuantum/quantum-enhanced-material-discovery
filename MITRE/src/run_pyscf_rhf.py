@@ -198,7 +198,7 @@ def run_rhf_get_integrals_qubit_hamiltonian(xyz_filepath, basis_set='sto-3g',
         traceback.print_exc(file=sys.stdout) # Direct traceback to the current stdout (log file)
         return None, None, None, None, None, None, None, None
 
-def run_vqe_pennylane(openfermion_qubit_op, num_active_electrons, num_active_spatial_orbitals, basis_set_name, max_iterations=200, verbose=False): # Added basis_set_name
+def run_vqe_pennylane(openfermion_qubit_op, num_active_electrons, num_active_spatial_orbitals, basis_set_name, max_iterations=200, verbose=False):
     print(f"\n--- Starting VQE Calculation (PennyLane runtime version: v{qml.__version__}) ---")
     num_qubits = 2 * num_active_spatial_orbitals
 
@@ -301,13 +301,20 @@ def run_vqe_pennylane(openfermion_qubit_op, num_active_electrons, num_active_spa
         qml.UCCSD(weights, wires=range(num_qubits), s_wires=s_wires, d_wires=d_wires, init_state=hf_state_config)
         return qml.expval(H_pennylane)
 
-    opt = qml.AdamOptimizer(stepsize=0.01, beta1=0.9, beta2=0.999)
-    params = pnp.random.normal(0, 0.1, size=num_uccsd_params, requires_grad=True)
+    initial_stepsize = 0.02
+    opt = qml.AdamOptimizer(stepsize=initial_stepsize, beta1=0.9, beta2=0.999)
+    params = pnp.random.normal(0, 0.01, size=num_uccsd_params, requires_grad=True)
+    
+    if len(raw_d_excitations) > 0:
+        num_singles = len(raw_s_excitations)
+        if num_singles > 0:
+            params[num_singles:] *= 0.5 
     
     print(f"\nUsing {num_uccsd_params} UCCSD parameters for optimization.")
     print("Attempting to run VQE optimization with PennyLane...")
     
     energies_for_plot = []
+    gradients_for_plot = []
     current_energy = cost_function(params)
     energies_for_plot.append(current_energy)
     best_energy_so_far = current_energy
@@ -316,71 +323,150 @@ def run_vqe_pennylane(openfermion_qubit_op, num_active_electrons, num_active_spa
     print(f"Iter {-1:3d}:  E = {current_energy:.8f} Ha (Initial) | Best E: {best_energy_so_far:.8f} Ha")
 
     # convergence parameters
-    conv_window = 5
-    conv_threshold = 1e-6
+    conv_window = 8
+    conv_threshold = 1e-7
+    energy_conv_threshold = 1e-8
+    gradient_conv_threshold = 1e-6
     no_improvement_count = 0
+    stagnation_count = 0
+    max_stagnation = 15
+    
+    # step size parameters
+    step_increase_factor = 1.05
+    step_decrease_factor = 0.85
+    min_stepsize = 1e-5
+    max_stepsize = 0.1
     
     for it in range(max_iterations):
         gradients = qml.grad(cost_function)(params)
-        params = opt.apply_grad(gradients, params) # update params
+        
+        # gradient clipping 
+        grad_norm = pnp.linalg.norm(gradients)
+        gradients_for_plot.append(grad_norm)
+        max_grad_norm = 1.0
+        if grad_norm > max_grad_norm:
+            gradients = gradients * (max_grad_norm / grad_norm)
+        
+        # update parameters afterwards
+        params = opt.apply_grad(gradients, params)
         
         current_energy = cost_function(params)
         energies_for_plot.append(current_energy)
         
         # update best energy and parameters only if improved
-        if current_energy < best_energy_so_far:
+        energy_improved = current_energy < best_energy_so_far
+        if energy_improved:
+            improvement = best_energy_so_far - current_energy
             best_energy_so_far = current_energy
             best_params = pnp.copy(params)
             no_improvement_count = 0
+            stagnation_count = 0
+            
+            # increase step size slightly if improving
+            if improvement > 1e-6 and opt.stepsize < max_stepsize:
+                opt.stepsize = min(opt.stepsize * step_increase_factor, max_stepsize)
         else:
             no_improvement_count += 1
+            stagnation_count += 1
         
-        # optimize step size if no improvement for 5 iterations
-        if no_improvement_count >= 5:
-            opt.stepsize *= 0.95
-            no_improvement_count = 0    
+        # optimize step count if no improvement for 5 iterations
+        if no_improvement_count >= 3:
+            opt.stepsize = max(opt.stepsize * step_decrease_factor, min_stepsize)
+            no_improvement_count = 0
         
+        # Progress reporting
         if (it + 1) % 20 == 0 or it == 0:
-            print(f"Iter {it:3d}:  E = {current_energy:.8f} Ha | Best E: {best_energy_so_far:.8f} Ha | Step size: {opt.stepsize:.6f}")
+            print(f"Iter {it:3d}:  E = {current_energy:.8f} Ha | Best E: {best_energy_so_far:.8f} Ha | Step: {opt.stepsize:.6f} | Grad: {grad_norm:.6f}")
         
-        # check convergence and if recent energies are stable
+        converged = False
+        convergence_reason = ""
+        
+        # check energy convergence
         if len(energies_for_plot) >= conv_window:
             recent_energies = energies_for_plot[-conv_window:]
-            if np.std(recent_energies) < conv_threshold and it > conv_window:
-                print(f"\nConverged at iteration {it} with energy std dev < {conv_threshold}")
-                break
+            energy_std = np.std(recent_energies)
+            if energy_std < conv_threshold and it > conv_window:
+                converged = True
+                convergence_reason = f"energy standard deviation ({energy_std:.2e}) < threshold ({conv_threshold:.2e})"
+        
+        # check consecutive energy differences
+        if len(energies_for_plot) >= 5:
+            recent_diffs = [abs(energies_for_plot[i] - energies_for_plot[i-1]) for i in range(-4, 0)]
+            if all(diff < energy_conv_threshold for diff in recent_diffs):
+                converged = True
+                convergence_reason = f"consecutive energy differences < {energy_conv_threshold:.2e}"
+        
+        # check gradient convergence
+        if len(gradients_for_plot) >= 3:
+            recent_grads = gradients_for_plot[-3:]
+            if all(g < gradient_conv_threshold for g in recent_grads):
+                converged = True
+                convergence_reason = f"gradient norm < {gradient_conv_threshold:.2e}"
+        
+        # check for stagnation
+        if stagnation_count >= max_stagnation:
+            converged = True
+            convergence_reason = f"no improvement for {max_stagnation} iterations"
+        
+        if converged:
+            print(f"\nConverged at iteration {it}: {convergence_reason}")
+            break
     
-    # restore best parameters from every iteration
     params = best_params
+    
+    # check energy to ensure consistency
+    final_energy = cost_function(params)
+    if abs(final_energy - best_energy_so_far) > 1e-10:
+        print(f"Warning: Final energy ({final_energy:.8f}) differs from best energy ({best_energy_so_far:.8f})")
+        best_energy_so_far = final_energy
 
-    np.savetxt(energy_data_filename, np.array(energies_for_plot), header="Iteration Energy(Ha)") # Use unique filename
-    print(f"\nSaved VQE energies (optimizer path) to {energy_data_filename}")
+    # save optimization data
+    optimization_data = np.column_stack([
+        np.arange(-1, len(energies_for_plot) - 1),
+        energies_for_plot,
+        [0.0] + gradients_for_plot  # Add 0 for initial gradient
+    ])
+    np.savetxt(energy_data_filename, optimization_data, 
+               header="Iteration Energy(Ha) GradientNorm", 
+               fmt=['%d', '%.12f', '%.8e'])
+    print(f"\nSaved VQE optimization data to {energy_data_filename}")
 
-    # Plotting logic integrated here
     num_energy_points_plot = len(energies_for_plot)
     if num_energy_points_plot > 0:
-        if num_energy_points_plot == 1: # Only initial energy
-            iterations_plot = np.array([-1])
-        else:
-            iterations_plot = np.array([-1] + list(range(num_energy_points_plot - 2)) + [num_energy_points_plot - 2])
+        iterations_plot = np.arange(-1, num_energy_points_plot - 1)
         
-        plt.figure(figsize=(10, 6))
-        plt.plot(iterations_plot, energies_for_plot, marker='o', linestyle='-')
-        plt.xlabel("Optimization Iteration (Adam Step)")
-        plt.ylabel("Energy (Hartree)")
-        plt.title(f"VQE Energy Convergence for DBT ({basis_set_name}, {num_active_electrons}e, {num_active_spatial_orbitals}o)")
-        plt.grid(True)
-        plt.xticks(np.linspace(min(iterations_plot), max(iterations_plot), num=min(20, len(iterations_plot)), dtype=int))
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+        
+        # Energy plot
+        ax1.plot(iterations_plot, energies_for_plot, marker='o', linestyle='-', markersize=3)
+        ax1.set_xlabel("Optimization Iteration")
+        ax1.set_ylabel("Energy (Hartree)")
+        ax1.set_title(f"VQE Energy Convergence for DBT ({basis_set_name}, {num_active_electrons}e, {num_active_spatial_orbitals}o)")
+        ax1.grid(True, alpha=0.3)
+        ax1.axhline(y=best_energy_so_far, color='red', linestyle='--', alpha=0.7, label=f'Best: {best_energy_so_far:.6f} Ha')
+        ax1.legend()
+        
+        # Gradient plot
+        if len(gradients_for_plot) > 0:
+            ax2.semilogy(iterations_plot[1:], gradients_for_plot, marker='s', linestyle='-', markersize=3, color='orange')
+            ax2.set_xlabel("Optimization Iteration")
+            ax2.set_ylabel("Gradient Norm (log scale)")
+            ax2.set_title("Gradient Norm Evolution")
+            ax2.grid(True, alpha=0.3)
+            ax2.axhline(y=gradient_conv_threshold, color='red', linestyle='--', alpha=0.7, label=f'Conv. threshold: {gradient_conv_threshold:.2e}')
+            ax2.legend()
+        
         plt.tight_layout()
-        plt.savefig(plot_filename) # Use unique filename
-        print(f"Saved convergence plot to {plot_filename}")
-        # plt.show() # Optionally show plot, but for batch runs, saving is often preferred.
-        plt.close() # Close the plot figure to free memory
+        plt.savefig(plot_filename, dpi=150)
+        print(f"Saved enhanced convergence plot to {plot_filename}")
+        plt.close()
     else:
         print("No energy data to plot.")
 
-
-    print(f"Final VQE Energy (raw value from PennyLane, best found): {best_energy_so_far:.8f} Hartrees")
+    print(f"Final VQE Energy (optimized with enhanced convergence): {best_energy_so_far:.8f} Hartrees")
+    print(f"Total optimization iterations: {len(energies_for_plot) - 1}")
+    print(f"Final gradient norm: {gradients_for_plot[-1] if gradients_for_plot else 'N/A':.6f}")
+    
     return best_energy_so_far
 
 if __name__ == "__main__":
