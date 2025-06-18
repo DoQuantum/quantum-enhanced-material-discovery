@@ -1,0 +1,47 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, phase3 ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Conda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        auto-update-conda: true
+        python-version: "3.11"
+        environment-file: environment.yml
+        activate-environment: asphalt-qchem-p3
+
+    - name: Install dependencies
+      run: |
+        conda env update --file environment.yml --prune
+        conda list
+
+    - name: Run Tests
+      run: |
+        pytest
+
+    - name: Run Notebooks
+      run: |
+        # Create results directory if it doesn't exist
+        mkdir -p results
+        # Check if there are any notebooks to run
+        if ls notebooks/*.ipynb 1> /dev/null 2>&1; then
+          for nb in notebooks/*.ipynb; do
+            papermill "$nb" "results/$(basename "$nb")" -k python3
+          done
+        else
+          echo "No notebooks found to run."
+        fi
