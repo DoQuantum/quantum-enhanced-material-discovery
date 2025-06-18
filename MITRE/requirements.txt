@@ -32,7 +32,7 @@ pyparsing==3.2.3
 pyscf==2.9.0
 python-dateutil==2.9.0.post0
 pytz==2025.2
-requests==2.32.3
+requests==2.32.4
 rustworkx==0.16.0
 scipy==1.15.3
 scipy-openblas32==0.3.29.265.0
