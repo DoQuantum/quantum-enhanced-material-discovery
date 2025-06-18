@@ -1,6 +1,6 @@
 # R1.10-OATH - Phase 3
 
-[![Run on qBraid](https://qbraid-static.s3.amazonaws.com/logos/Run_on_qBraid_white.png)](https://qbraid.com/open/https://github.com/DoQuantum/r1.10-oath.git?env=asphalt-qchem-p3)
+[<img src="https://qbraid-static.s3.amazonaws.com/logos/Launch_on_qBraid_white.png" width="150">](https://account.qbraid.com?gitHubUrl=<YOUR GIT .git LINK>)
 
 ---
 
