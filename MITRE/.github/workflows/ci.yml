@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - phase3
+  pull_request:
+    branches:
+      - phase3
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: 3.11
+          auto-update-conda: true
+          environment-file: environment.yml
+          activate-environment: phase3-env
+          use-mamba: true
+
+      - name: Run pytest
+        run: |
+          source activate phase3-env
+          pytest
+
+      - name: Execute notebooks with papermill
+        run: |
+          source activate phase3-env
+          pip install papermill
+          find . -name "*.ipynb" -not -path "*/.*" | while read nb; do
+            papermill "$nb" /dev/null
+          done
