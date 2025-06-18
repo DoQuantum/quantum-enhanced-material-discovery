@@ -1,6 +1,6 @@
 # R1.10-OATH - Phase 3
 
-[<img src="https://qbraid-static.s3.amazonaws.com/logos/Launch_on_qBraid_white.png" width="150">](https://account.qbraid.com?gitHubUrl=<YOUR GIT .git LINK>)
+[<img src="https://qbraid-static.s3.amazonaws.com/logos/Launch_on_qBraid_white.png" width="150">](https://account.qbraid.com?gitHubUrl=https://github.com/DoQuantum/r1.10-oath.git&branch=phase3)
 
 ---
 
