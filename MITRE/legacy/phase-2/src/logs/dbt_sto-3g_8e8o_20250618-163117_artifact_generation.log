@@ -1,0 +1,35 @@
+--- Script starting to generate artifacts ---
+Run configured for basis set: sto-3g
+Output is being logged to this file: logs/dbt_sto-3g_8e8o_20250618-163117_artifact_generation.log
+
+Molecule: dibenzothiophene.xyz
+Basis set: sto-3g
+Number of basis functions (MOs): 77
+
+SCF converged: True
+Total RHF Energy: -846.70638670 Hartrees
+
+--- Active Space Selection ---
+Full MOs: 77, Full Occupied MOs: 48
+Requested active orbitals: 8, Requested active electrons: 8
+Selected active space MO indices: [44, 45, 46, 47, 48, 49, 50, 51]
+Number of MOs in active space: 8
+HOMO index (0-based): 47, LUMO index (0-based): 48
+MO energies (Hartree) for active space: [-0.32388672 -0.28599394 -0.23456188 -0.21743122  0.21053341  0.2576417
+  0.27941433  0.32289636]
+Core MO indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43]
+Nuclear repulsion energy (used as E_offset for InteractionOperator): 795.24154567 Hartrees
+Shape of active one-electron integrals: (8, 8)
+Shape of active two-electron integrals (physicist's): (8, 8, 8, 8)
+
+--- Hamiltonian Construction (Active Space: 8 orbitals) ---
+Number of terms in Fermionic Hamiltonian: 4161
+Number of qubits for JW mapping: 16
+Number of terms in OpenFermion Qubit Hamiltonian (Jordan-Wigner): 849
+Saved active space integrals to dbt_integrals.npz
+Saved qubit Hamiltonian to qubit_hamiltonian.json
+INFO: FermionOperator constant does not match QubitOperator constant (known OpenFermion JW behavior).
+
+--- Artifact Generation Successful ---
+Files 'dbt_integrals.npz' and 'qubit_hamiltonian.json' have been generated in the project root.
+Script will now exit as requested.

@@ -1,0 +1,20 @@
+name: asphalt-qchem-p3
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pennylane
+  - qiskit
+  - matplotlib
+  - pandas
+  - scipy
+  - pytest
+  - black
+  - isort
+  - pre-commit
+  - nbstripout
+  - papermill
+  - pip:
+    - openfermion
+    - pyscf
