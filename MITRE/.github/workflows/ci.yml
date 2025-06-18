@@ -2,9 +2,13 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, phase3 ]
+    branches:
+      - main
+      - phase3
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+      - phase3
 
 jobs:
   build:
@@ -35,9 +39,7 @@ jobs:
 
     - name: Run Notebooks
       run: |
-        # Create results directory if it doesn't exist
         mkdir -p results
-        # Check if there are any notebooks to run
         if ls notebooks/*.ipynb 1> /dev/null 2>&1; then
           for nb in notebooks/*.ipynb; do
             papermill "$nb" "results/$(basename "$nb")" -k python3
