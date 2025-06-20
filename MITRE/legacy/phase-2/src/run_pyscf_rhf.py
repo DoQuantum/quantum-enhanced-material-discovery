@@ -26,7 +26,12 @@ def run_rhf_calculation_and_get_integrals(
 ):
     try:
         mol = gto.Mole()
-        mol.atom = xyz_filepath
+        # PySCF's mol.atom expects the coordinate block of an XYZ file,
+        # not the full file with headers. We read the file and skip the
+        # first two lines (number of atoms and comment).
+        with open(xyz_filepath, 'r') as f:
+            xyz_lines = f.readlines()
+            mol.atom = "".join(xyz_lines[2:])
         mol.basis = basis_set
         mol.build()
 
@@ -173,6 +178,7 @@ def run_rhf_get_integrals_qubit_hamiltonian(
     basis_set="sto-3g",
     n_active_orbitals_target=8,
     n_active_electrons_target=8,
+    output_dir=".",
 ):
     try:
         (
@@ -216,24 +222,31 @@ def run_rhf_get_integrals_qubit_hamiltonian(
             f"Number of terms in OpenFermion Qubit Hamiltonian (Jordan-Wigner): {len(qubit_hamiltonian_openfermion.terms)}"
         )
 
-        # --- START: ADDED CODE TO SAVE ARTIFACTS ---
+        # --- START: MODIFIED CODE TO SAVE ARTIFACTS ---
+        # Create the output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Define file paths
+        integrals_path = os.path.join(output_dir, "dbt_integrals.npz")
+        hamiltonian_path = os.path.join(output_dir, "qubit_hamiltonian.json")
+
         # 1. Save DBT integrals (active space one- and two-body integrals)
         np.savez(
-            "dbt_integrals.npz",
+            integrals_path,
             one_body_integrals=h1_act,
             two_body_integrals=h2_act_phys,
         )
-        print("Saved active space integrals to dbt_integrals.npz")
+        print(f"Saved active space integrals to {integrals_path}")
 
         # 2. Save qubit Hamiltonian to JSON
         hamiltonian_dict = {
             str(term): coeff.real
             for term, coeff in qubit_hamiltonian_openfermion.terms.items()
         }
-        with open("qubit_hamiltonian.json", "w") as f:
+        with open(hamiltonian_path, "w") as f:
             json.dump(hamiltonian_dict, f, indent=4)
-        print("Saved qubit Hamiltonian to qubit_hamiltonian.json")
-        # --- END: ADDED CODE TO SAVE ARTIFACTS ---
+        print(f"Saved qubit Hamiltonian to {hamiltonian_path}")
+        # --- END: MODIFIED CODE ---
 
         # print(f"DEBUG: E_offset_nuc_rep passed to InteractionOperator: {E_offset_nuc_rep:.8f}")
         # print(f"DEBUG: interaction_op.constant = {interaction_op.constant:.8f}")
@@ -580,9 +593,13 @@ if __name__ == "__main__":
     # === This block is modified to only generate artifacts and then exit ===
     # === Configuration for the current run ===
     current_basis_set = "sto-3g"
-    xyz_file = "dibenzothiophene.xyz"
+    # The xyz file is in the same directory as this script.
+    # We construct the full path to ensure it's found when run from the project root.
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    xyz_file = os.path.join(script_dir, "dibenzothiophene.xyz")
     num_active_orbitals_config = 8
     num_active_electrons_config = 8
+    output_directory = "data/dbt"  # Define the target directory for artifacts
 
     # --- Setup Log File ---
     os.makedirs("logs", exist_ok=True)
@@ -606,13 +623,14 @@ if __name__ == "__main__":
                     basis_set=current_basis_set,
                     n_active_orbitals_target=num_active_orbitals_config,
                     n_active_electrons_target=num_active_electrons_config,
+                    output_dir=output_directory,
                 )
             )
 
             if mf_obj and openfermion_h_qubit:
                 print("\n--- Artifact Generation Successful ---")
                 print(
-                    "Files 'dbt_integrals.npz' and 'qubit_hamiltonian.json' have been generated in the project root."
+                    f"Files 'dbt_integrals.npz' and 'qubit_hamiltonian.json' have been generated in '{output_directory}'."
                 )
                 print("Script will now exit as requested.")
             else:
