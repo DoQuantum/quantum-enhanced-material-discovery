@@ -1,0 +1,13 @@
+pennylane
+qiskit
+matplotlib
+pandas
+scipy
+pytest
+black
+isort
+pre-commit
+nbstripout
+papermill
+openfermion
+pyscf

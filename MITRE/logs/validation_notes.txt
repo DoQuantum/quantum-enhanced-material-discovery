@@ -1,0 +1,19 @@
+RHF/STO-3G Validation Results - 2025-06-22
+
+1. Phase 2 Reference:
+- Source: MITRE/legacy/phase-2/logs/dbt_sto-3g_8e8o_20250526-174457_run.log
+- RHF Total Energy: -846.70638670 Hartrees
+
+2. Geometry Comparison:
+- Current geometry (MITRE/data/dbt/dbt.geo) and phase-2 geometry (MITRE/legacy/phase-2/src/dibenzothiophene.xyz) are identical
+- No structural differences detected
+
+3. Current RHF Verification:
+- Could not verify current RHF energy due to:
+  * dbt_integrals.npz - Unable to read (access issues)
+  * rhf_run_notes.txt - File not found
+
+4. Conclusion:
+- Phase 2 RHF energy is properly documented
+- Geometries match between versions
+- Current RHF energy verification requires access to dbt_integrals.npz
