@@ -2,7 +2,7 @@ import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from src.adapt_vqe_driver import run_adapt_vqe_baseline
+from adapt_vqe_driver import run_adapt_vqe_baseline
 
 
 def save_and_plot_results(trace_data):

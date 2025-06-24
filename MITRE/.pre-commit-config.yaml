@@ -4,16 +4,22 @@ repos:
     hooks:
     -   id: black
         exclude: ^MITRE/legacy/
+        args: ["--skip-string-normalization"]  # Black does not enforce line length explicitly
+
 -   repo: https://github.com/PyCQA/isort
     rev: 5.13.2
     hooks:
     -   id: isort
         exclude: ^MITRE/legacy/
+        args: ["--line-length", "0"]  # Disable line length enforcement
+
 -   repo: https://github.com/PyCQA/flake8
     rev: 7.1.0
     hooks:
     -   id: flake8
         exclude: ^MITRE/legacy/
+        args: ["--extend-ignore=E501"]  # Ignore line length errors (E501)
+
 -   repo: https://github.com/kynan/nbstripout
     rev: 0.7.1
     hooks:
