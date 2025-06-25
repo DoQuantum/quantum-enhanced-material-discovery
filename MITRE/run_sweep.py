@@ -51,8 +51,10 @@ for i, config in enumerate(CONFIGURATIONS):
     print(f"--- Running Job {i+1}/{len(CONFIGURATIONS)}: {job_tag} ---")
 
     # Construct the command to run the experiment driver
+    # The "-u" flag ensures unbuffered output from the child process
     command = [
-        sys.executable,  # Use the same python interpreter that is running this script
+        sys.executable,
+        "-u",
         DRIVER_SCRIPT,
         "--ansatz",
         config['ansatz'],
@@ -62,19 +64,32 @@ for i, config in enumerate(CONFIGURATIONS):
         str(config['lr']),
     ]
 
+    last_line = ""
     try:
-        # Execute the driver script and capture its output
-        result = subprocess.run(
+        # Use Popen to stream output in real-time
+        with subprocess.Popen(
             command,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,  # Redirect stderr to stdout to see errors immediately
             text=True,
-            check=True,  # Raises an exception for non-zero exit codes
             encoding='utf-8',
-        )
+            bufsize=1,  # Line-buffered
+        ) as process:
+            # Read and print output line by line as it is generated
+            for line in process.stdout:
+                print(line, end='')  # Print the line to the console
+                # The final CSV output is the last non-empty line
+                if line.strip():
+                    last_line = line.strip()
 
-        # The driver prints a single CSV row. Parse it.
-        # Format: Ansatz,Optimiser,Hyper-params,Final energy (Ha),CNOT depth,Iterations,Wall-time (s)
-        output_data = result.stdout.strip().split(',')
+        # Check if the process exited with an error after it has finished
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(
+                process.returncode, command, output=last_line
+            )
+
+        # The driver prints a single CSV row as its last output. Parse it.
+        output_data = last_line.split(',')
 
         # Extract metrics from the driver's output
         ansatz, optimiser, hyper_params = output_data[0], output_data[1], output_data[2]
@@ -102,19 +117,28 @@ for i, config in enumerate(CONFIGURATIONS):
         pd.DataFrame([full_result_row]).to_csv(
             RESULTS_FILE, mode='a', header=False, index=False
         )
-        print(
-            f"SUCCESS: {job_tag}. Final Energy: {final_energy:.6f} Ha. Results appended.\n"
-        )
+        print(f"\nSUCCESS: {job_tag}. Results appended.\n")
 
     except subprocess.CalledProcessError as e:
         # Log any failed configurations for follow-up
         error_message = "--- FAILED CONFIGURATION ---\n"
         error_message += f"Command: {' '.join(e.cmd)}\n"
         error_message += f"Exit Code: {e.returncode}\n"
-        error_message += f"STDOUT:\n{e.stdout}\n"
-        error_message += f"STDERR:\n{e.stderr}\n"
+        error_message += f"LAST OUTPUT:\n{e.output}\n"
 
-        print(f"ERROR: {job_tag} failed. See {LOG_FILE} for details.\n")
+        print(f"\nERROR: {job_tag} failed. See {LOG_FILE} for details.\n")
+        with open(LOG_FILE, 'a') as f:
+            f.write(error_message)
+    except (IndexError, ValueError) as e:
+        # This will catch errors if the last line was not the expected CSV
+        error_message = "--- FAILED CONFIGURATION (Output Parsing Error) ---\n"
+        error_message += f"Command: {' '.join(command)}\n"
+        error_message += f"Error: {e}\n"
+        error_message += f"Could not parse the last line of output: '{last_line}'\n"
+
+        print(
+            f"\nERROR: {job_tag} failed during output parsing. See {LOG_FILE} for details.\n"
+        )
         with open(LOG_FILE, 'a') as f:
             f.write(error_message)
     except FileNotFoundError:

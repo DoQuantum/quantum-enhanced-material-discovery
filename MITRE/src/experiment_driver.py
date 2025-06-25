@@ -8,6 +8,11 @@ import warnings
 import pandas as pd
 import pennylane as qml
 from pennylane import numpy as np
+from tqdm.auto import tqdm
+
+# --- Global Debug Flag ---
+# Set to True to enable detailed print statements during execution.
+DEBUG = True
 
 # --- Environment and Utility Functions (from adapt_vqe_driver.py) ---
 
@@ -42,8 +47,8 @@ def load_sparse_hamiltonian(path: str, n_qubits: int = 16, coeff_cut: float = 1e
 
 
 def make_device(n_qubits: int):
-    """Creates a PennyLane device, defaulting to lightning.qubit as requested."""
-    return qml.device("lightning.gpu", wires=n_qubits)
+    """Creates a PennyLane device."""
+    return qml.device("lightning.qubit", wires=n_qubits)
 
 
 def get_cnot_depth(qnode, params):
@@ -118,7 +123,9 @@ def run_static_vqe(config, H, n_qubits, dev):
     t0 = time.time()
     for step in range(vqe_steps):
         params, energy = opt.step_and_cost(cost_fn, params)
-        if (step + 1) % 50 == 0:
+        # Print more frequently if debugging
+        print_interval = 25 if DEBUG else 50
+        if (step + 1) % print_interval == 0:
             print(f"  Step {step+1:03d}: Energy = {energy:.8f} Ha")
 
     wall_time = time.time() - t0
@@ -155,7 +162,15 @@ def run_adapt_vqe(config, H, n_qubits, dev):
 
     active_operators = []
     active_params = np.array([], requires_grad=True)
-    energy = 0.0  # Will be updated after the first cycle
+
+    # Calculate and print initial HF energy
+    @qml.qnode(dev)
+    def hf_energy_circuit():
+        qml.BasisState(hf_state, wires=range(n_qubits))
+        return qml.expval(H)
+
+    energy = hf_energy_circuit()
+    print(f"Initial HF energy: {energy:.8f} Ha")
 
     t0 = time.time()
 
@@ -169,27 +184,40 @@ def run_adapt_vqe(config, H, n_qubits, dev):
         def previous_ansatz_state(params):
             qml.BasisState(hf_state, wires=range(n_qubits))
             for i, op in enumerate(active_operators):
-                op(params[i])
+                op.__class__(params[i], wires=op.wires)
             return qml.state()
 
         current_state = previous_ansatz_state(active_params)
 
         # Calculate gradients for all operators remaining in the pool
+        print("  Calculating gradients for all operators in the pool...")
         gradients = []
-        for op in pool:
+        for op in tqdm(pool, desc="Gradient Scan", leave=False, ascii=True):
             # Define a temporary QNode to compute the gradient for one operator
             @qml.qnode(dev, diff_method="parameter-shift")
             def grad_eval_circuit(param):
                 qml.StatePrep(current_state, wires=range(n_qubits))
-                op(param)
+                op.__class__(param, wires=op.wires)
                 return qml.expval(H)
 
             # The gradient at theta=0 is what we need
             grad_val = qml.grad(grad_eval_circuit, argnum=0)(0.0)
             gradients.append(np.abs(grad_val))
 
+        if not gradients:
+            print("Operator pool is empty. Stopping.")
+            break
+
         max_grad_idx = np.argmax(gradients)
         max_grad = gradients[max_grad_idx]
+
+        if DEBUG:
+            top_3_indices = np.argsort(gradients)[-3:][::-1]
+            print("  [DEBUG] Top 3 gradients in pool:")
+            for idx in top_3_indices:
+                op = pool[idx]
+                print(f"    - Op: {op.name}({op.wires}), Grad: {gradients[idx]:.6f}")
+
         print(f"Max gradient in pool: {max_grad:.8f}")
 
         # 2. Check stopping condition
@@ -205,7 +233,7 @@ def run_adapt_vqe(config, H, n_qubits, dev):
         print(f"Adding operator to ansatz: {best_op.name} on wires {best_op.wires}")
 
         # Append a new parameter (initialized to 0.0) for the new operator
-        active_params = np.append(active_params, 0.0)
+        active_params = np.append(active_params, 1e-4 * np.random.randn())
         active_params.requires_grad = True
 
         # 4. Run VQE to optimize all active parameters
@@ -213,7 +241,7 @@ def run_adapt_vqe(config, H, n_qubits, dev):
         def vqe_circuit(params):
             qml.BasisState(hf_state, wires=range(n_qubits))
             for i, op in enumerate(active_operators):
-                op(params[i])
+                op.__class__(params[i], wires=op.wires)
             return qml.expval(H)
 
         # Instantiate the chosen optimizer for this cycle's VQE run
@@ -227,8 +255,20 @@ def run_adapt_vqe(config, H, n_qubits, dev):
             opt = qml.LBFGSBOptimizer()
 
         print(f"Optimizing {len(active_params)} parameters with {optimizer_name}...")
+        prev_e = energy
         for step in range(vqe_steps_per_cycle):
             active_params, energy = opt.step_and_cost(vqe_circuit, active_params)
+            if DEBUG and (step + 1) % 25 == 0:
+                delta_e = energy - prev_e
+                print(
+                    f"    [VQE Step {step+1:03d}] E={energy:.8f} Ha, ΔE={delta_e:+.2e}"
+                )
+
+            # Early stopping for VQE inner loop
+            if abs(energy - prev_e) < 1e-6:
+                print(f"  ↳ VQE converged at step {step+1}, |ΔE| < 1e-6.")
+                break
+            prev_e = energy
 
         print(f"Cycle {cycle + 1} complete. Energy = {energy:.8f} Ha")
 
@@ -242,12 +282,19 @@ def run_adapt_vqe(config, H, n_qubits, dev):
     def final_circuit(params):
         qml.BasisState(hf_state, wires=range(n_qubits))
         for i, op in enumerate(active_operators):
-            op(params[i])
+            op.__class__(params[i], wires=op.wires)
         return qml.expval(H)
 
     cnot_depth = get_cnot_depth(final_circuit, active_params)
     # The number of "iterations" for ADAPT is the number of operators added
     iterations = len(active_operators)
+
+    print("\n--- Run Summary ---")
+    print(f"Final Energy: {energy:.8f} Ha")
+    print(f"CNOT Depth: {cnot_depth}")
+    print(f"ADAPT Cycles (Iterations): {iterations}")
+    print(f"Total Wall-time: {wall_time:.2f}s")
+    print("-------------------\n")
 
     return {
         "final_energy": float(energy),
@@ -280,6 +327,9 @@ def main():
     args = parser.parse_args()
 
     config = vars(args)
+
+    job_tag = f"{config['ansatz']}-{config['optimizer']}-lr{config['lr']}"
+    print(f"--- Initializing Job: {job_tag} ---")
 
     # --- Setup ---
     n_qubits = 16
