@@ -19,6 +19,7 @@ energy_tol = 1e-4
 
 
 def load_sparse_hamiltonian(path: str, n_qubits: int = 16, coeff_cut: float = 1e-6):
+    """Load a sparse qubit Hamiltonian from JSON."""
     with open(path) as f:
         raw = json.load(f)
     pauli = {"X": qml.PauliX, "Y": qml.PauliY, "Z": qml.PauliZ}
@@ -32,17 +33,24 @@ def load_sparse_hamiltonian(path: str, n_qubits: int = 16, coeff_cut: float = 1e
             ops.append(qml.Identity(0))
             continue
         term_ops = [pauli[p](int(i)) for p, i in re.findall(r"([XYZ])(\d+)", pstr)]
-        ops.append(
-            qml.Identity(0)
-            if not term_ops
-            else term_ops[0] if len(term_ops) == 1 else qml.prod(*term_ops)
-        )
+        if not term_ops:
+            ops.append(qml.Identity(0))
+        elif len(term_ops) == 1:
+            ops.append(term_ops[0])
+        else:
+            # Build multi-Pauli observable via operator overloading
+            from functools import reduce
+
+            ops.append(reduce(lambda a, b: a @ b, term_ops))
     return qml.Hamiltonian(coeffs, ops), n_qubits
 
 
 def make_device(n_qubits: int):
-    """Creates a PennyLane device."""
-    return qml.device("lightning.gpu", wires=n_qubits)
+    """Creates a PennyLane device (GPU fallback to CPU)."""
+    try:
+        return qml.device("lightning.gpu", wires=n_qubits)
+    except qml.DeviceError:
+        return qml.device("lightning.qubit", wires=n_qubits)
 
 
 # --- Static VQE ---
@@ -53,7 +61,6 @@ def run_static_vqe(config, H, n_qubits, dev):
     vqe_steps = config.get('vqe_steps', 300)
     ELEC = 8
 
-    # Define ansatz QNode
     if ansatz == "hea":
         n_layers = 4
         shape = qml.templates.StronglyEntanglingLayers.shape(
@@ -82,7 +89,6 @@ def run_static_vqe(config, H, n_qubits, dev):
     else:
         raise ValueError(f"Unsupported static ansatz: {config['ansatz']}")
 
-    # Choose optimizer
     if opt_name.lower() == 'spsa':
         opt = qml.SPSAOptimizer(maxiter=vqe_steps, a=lr)
     elif opt_name.lower() == 'adam':
@@ -114,7 +120,7 @@ def run_static_vqe(config, H, n_qubits, dev):
     }
 
 
-# --- ADAPT-VQE with batch gradient ---
+# --- ADAPT-VQE with individual gradients ---
 def run_adapt_vqe(config, H, n_qubits, dev):
     lr = config['lr']
     max_cycles = config.get('adapt_cycles', 50)
@@ -127,84 +133,98 @@ def run_adapt_vqe(config, H, n_qubits, dev):
     pool = [qml.SingleExcitation(0.0, wires=w) for w in singles] + [
         qml.DoubleExcitation(0.0, wires=w) for w in doubles
     ]
-    active_ops = []
-    active_params = np.array([], requires_grad=True)
 
-    @qml.qnode(dev, diff_method='adjoint')
-    def hf_energy():
+    @qml.qnode(dev, diff_method='adjoint', interface='autograd')
+    def energy(params):
         qml.BasisState(hf_state, wires=range(n_qubits))
+        for p, gate in zip(params, pool):
+            gate.__class__(p, wires=gate.wires)
         return qml.expval(H)
 
-    print(f"Initial HF energy: {hf_energy():.6f} Ha")
+    grad_fn = qml.grad(energy)
+
+    params = np.zeros(len(pool), requires_grad=True)
+    e_hf = float(energy(params))
+    print(f"Initial HF energy: {e_hf:.6f} Ha")
+    cost_val = e_hf
+    trace = []
     t0 = time.time()
 
-    from pennylane.workflow import construct_batch
+    opt = qml.AdamOptimizer(stepsize=lr)
+    recent = []
 
-    for cycle in range(max_cycles):
-        print(f"\n--- Cycle {cycle+1}/{max_cycles} ---")
+    for cycle in range(1, max_cycles + 1):
+        start = time.time()
+        print(f"\n--- Cycle {cycle}/{max_cycles} ---")
 
-        @qml.qnode(dev, diff_method='parameter-shift')
-        def pool_qnode(params):
-            qml.BasisState(hf_state, wires=range(n_qubits))
-            for i, op in enumerate(active_ops):
-                op.__class__(active_params[i], wires=op.wires)
-            for i, op in enumerate(pool):
-                op.__class__(params[i], wires=op.wires)
-            return qml.expval(H)
+        g = grad_fn(params)
+        g_abs = np.abs(g)
+        top = np.argsort(g_abs)[::-1]
+        print("  ↳ Top gradients:")
+        for i in range(min(3, len(top))):
+            print(f"    - idx {top[i]}, g={g[top[i]]:.4e}")
 
-        zero_params = np.zeros(len(pool))
-        tapes, fn = construct_batch(pool_qnode, level='gradient')(zero_params)
-        results = qml.execute(tapes, dev)
-        raw_grads = fn(results)
-        gradients = list(map(abs, raw_grads))
-        print(f" Gradients: {gradients}")
+        idx = next((i for i in top if i not in recent), top[0])
+        print(f"  ↳ Selected idx {idx}, g={g[idx]:.4e}")
+        recent.append(idx)
+        if len(recent) > 5:
+            recent.pop(0)
 
-        if max(gradients) < grad_tol:
-            print("Converged by gradient tolerance.")
+        if g_abs[idx] < grad_tol:
+            print("✔ Gradient tol met, stopping ADAPT.")
             break
 
-        idx = int(np.argmax(gradients))
-        active_ops.append(pool.pop(idx))
-        active_params = np.append(active_params, np.random.randn())
+        p = params.copy()
+        p[idx] = 1e-4 * np.random.randn()
+        best_e = float(energy(p))
+        best_p = p.copy()
+        print(f"  ↳ VQE start E={best_e:.6f}")
 
-        @qml.qnode(dev, diff_method='adjoint')
-        def vqe_circuit(params):
-            qml.BasisState(hf_state, wires=range(n_qubits))
-            for i, op in enumerate(active_ops):
-                op.__class__(params[i], wires=op.wires)
-            return qml.expval(H)
-
-        # Inner VQE with Adam and early stopping
-        inner_opt = qml.AdamOptimizer(stepsize=lr)
-        prev_e = None
-        for i in range(vqe_steps):
-            active_params, e = inner_opt.step_and_cost(vqe_circuit, active_params)
-            print(f"    [VQE {cycle+1} Step {i+1}/{vqe_steps}] E = {e:.6f}", flush=True)
-            if prev_e is not None and abs(e - prev_e) < energy_tol:
-                print(f"    ↳ Early stop at step {i+1}, |ΔE| < {energy_tol}")
+        lr0, lrF = lr, 1e-4
+        decay = (lrF / lr0) ** (1 / vqe_steps)
+        opt.stepsize = lr0
+        prev_e = best_e
+        for s in range(vqe_steps):
+            p, e = opt.step_and_cost(energy, p)
+            if s < 3 or s % 50 == 0:
+                print(
+                    f"    [VQE {s+1:03d}] E={e:.6f}, ΔE={e-prev_e:.2e}, lr={opt.stepsize:.2e}"
+                )
+            opt.stepsize *= decay
+            if e < best_e:
+                best_e, best_p = e, p.copy()
+                print(f"    ↳ New best at step {s+1}: {best_e:.6f}")
+            if s > 10 and abs(e - prev_e) < energy_tol:
+                print(f"    ↳ Early stop at step {s+1}, |ΔE|<{energy_tol}")
                 break
             prev_e = e
+
+        print(f"  ↳ VQE done best E={best_e:.6f}")
+        if best_e < cost_val:
+            params, cost_val = best_p.copy(), best_e
+
+        trace.append([cycle, cost_val, float(g_abs[idx]), time.time() - start])
 
     wall = time.time() - t0
 
     @qml.qnode(dev, diff_method='adjoint')
     def final_circuit(params):
         qml.BasisState(hf_state, wires=range(n_qubits))
-        for i, op in enumerate(active_ops):
-            op.__class__(params[i], wires=op.wires)
+        for p, gate in zip(params, pool):
+            gate.__class__(p, wires=gate.wires)
         return qml.expval(H)
 
-    depth = qml.specs(final_circuit)(active_params)['resources']['depth']
-    print(f"Final E={e:.6f}, depth={depth}, time={wall:.1f}s")
+    depth = qml.specs(final_circuit)(params)['resources']['depth']
+    print(f"Final E={cost_val:.6f}, depth={depth}, time={wall:.1f}s")
+
     return {
-        "final_energy": float(e),
+        "final_energy": float(cost_val),
         "cnot_depth": depth,
-        "iterations": len(active_ops),
+        "iterations": len(trace),
         "wall_time": wall,
     }
 
 
-# --- Main Driver ---
 def main():
     parser = argparse.ArgumentParser(description="Run VQE or ADAPT-VQE")
     parser.add_argument(

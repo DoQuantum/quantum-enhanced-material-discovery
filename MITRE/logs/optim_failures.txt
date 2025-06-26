@@ -1,0 +1,65 @@
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+NameError: name 'term_ops' is not defined
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+NameError: name 'term_ops' is not defined
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: module 'pennylane.operation' has no attribute 'Tensor'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: module 'pennylane.operation' has no attribute 'Tensor'
