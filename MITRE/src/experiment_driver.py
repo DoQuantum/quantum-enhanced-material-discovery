@@ -150,7 +150,18 @@ def run_adapt_vqe(config, H, n_qubits, dev):
     trace = []
     t0 = time.time()
 
-    opt = qml.AdamOptimizer(stepsize=lr)
+    opt_name = config["optimizer"].lower()
+
+    if opt_name == "spsa":
+        opt = qml.SPSAOptimizer(maxiter=vqe_steps, a=lr)
+    elif opt_name == "cobyla":
+        opt = qml.SciPyOptimizer(
+            method="COBYLA", maxiter=vqe_steps, options={"rhobeg": lr, "disp": False}
+        )
+    elif opt_name == "l-bfgs-b":
+        opt = qml.LBFGSBOptimizer()
+    else:  # default → Adam
+        opt = qml.AdamOptimizer(stepsize=lr)
     recent = []
 
     for cycle in range(1, max_cycles + 1):

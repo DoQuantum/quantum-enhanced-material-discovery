@@ -63,3 +63,8 @@ Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/exper
 Exit Code: 1
 LAST OUTPUT:
 AttributeError: module 'pennylane.operation' has no attribute 'Tensor'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: 'Resources' object is not subscriptable

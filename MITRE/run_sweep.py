@@ -8,8 +8,8 @@ import pandas as pd
 CONFIGURATIONS = []
 ANSATZE = ["ADAPT-VQE", "k-UpCCGSD", "HEA"]
 OPTIMIZERS = {
-    "SPSA": [0.2, 0.1, 0.05],
     "Adam": [0.2, 0.1, 0.05],
+    "SPSA": [0.2, 0.1, 0.05],
     "COBYLA": [0.2, 0.1, 0.05],  # Represents step-size 'rhobeg'
     "L-BFGS-B": [0.0],  # No learning rate, use a placeholder
 }
