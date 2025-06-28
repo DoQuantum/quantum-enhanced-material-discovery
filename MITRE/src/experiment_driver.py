@@ -12,7 +12,6 @@ import warnings
 import pandas as pd
 import pennylane as qml
 from pennylane import numpy as np
-from scipy.optimize import minimize
 
 # ── runtime hints ───────────────────────────────────────────────────────────
 os.environ.setdefault("PL_OPENMP_PARALLEL", "true")
@@ -176,29 +175,6 @@ def run_adapt_vqe(cfg, H, n_qubits, dev):
             return qml.SPSAOptimizer(maxiter=vqe_steps, a=lr_init)
         if opt_name == "adam":
             return qml.AdamOptimizer(stepsize=lr_init)
-        if opt_name == "cobyla":
-
-            def step_and_cost(x0):
-                res = minimize(
-                    lambda v: energy(v),
-                    x0,
-                    method="COBYLA",
-                    options={"maxiter": vqe_steps, "rhobeg": lr_init},
-                )
-                return res.x, float(res.fun)
-
-            return step_and_cost
-
-        def step_and_cost(x0):  # L-BFGS-B
-            res = minimize(
-                lambda v: energy(v),
-                x0,
-                method="L-BFGS-B",
-                options={"maxiter": vqe_steps},
-            )
-            return res.x, float(res.fun)
-
-        return step_and_cost
 
     start = time.time()
     for cycle in range(1, max_cycles + 1):
@@ -241,22 +217,14 @@ def run_adapt_vqe(cfg, H, n_qubits, dev):
     )
 
 
-# ── static-VQE (unchanged; add ckpt similarly if needed) -------------------
-def run_static_vqe(cfg, H, n_qubits, dev):
-    raise NotImplementedError(
-        "static VQE block omitted for brevity; \
-add checkpoint logic analogously if required."
-    )
-
-
 # ── CLI & driver ───────────────────────────────────────────────────────────
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--ansatz", choices=["ADAPT-VQE", "HEA", "k-UpCCGSD"], required=True)
+    p.add_argument("--ansatz", choices=["ADAPT-VQE"], required=True)
     p.add_argument(
         "--optimizer",
-        choices=["hqng-la", "SPSA", "1PH-SPSA", "Adam", "COBYLA", "L-BFGS-B"],
-        default="1PH-SPSA",
+        choices=["hqng-la", "SPSA", "Adam"],
+        default="hqng-la",
     )
     p.add_argument("--lr", type=float, default=0.05)
     p.add_argument("--hamiltonian_file", default="data/dbt/qubit_hamiltonian.json")
@@ -265,10 +233,7 @@ def main():
     H, _ = load_sparse_hamiltonian(args["hamiltonian_file"], 16)
     dev = make_device(16)
 
-    if args["ansatz"] == "ADAPT-VQE":
-        res = run_adapt_vqe(args, H, 16, dev)
-    else:
-        res = run_static_vqe(args, H, 16, dev)
+    res = run_adapt_vqe(args, H, 16, dev)
 
     df = pd.DataFrame(
         [

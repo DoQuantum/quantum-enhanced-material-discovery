@@ -10,15 +10,13 @@ import pandas as pd
 
 # ── Configuration matrix ───────────────────────────────────────────
 CONFIGURATIONS = []
-ANSATZE = ["ADAPT-VQE", "HEA", "k-UpCCGSD"]
+ANSATZE = ["ADAPT-VQE"]
 
 OPTIMIZERS = {
     #   optimizer :  list of learning-rate / step-size values to test
     "hqng-la": [0.05],  # HQNG-LA: learning rate
     "Adam": [0.2, 0.1, 0.05],
     "SPSA": [0.2, 0.1, 0.05],
-    "COBYLA": [0.2, 0.1, 0.05],  # 'rhobeg' step size
-    "1PH-SPSA": [0.2, 0.1, 0.05],  # ★ new, one-eval Hadamard SPSA
 }
 
 for ansatz in ANSATZE:
