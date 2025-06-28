@@ -1,0 +1,470 @@
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+NameError: name 'term_ops' is not defined
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+NameError: name 'term_ops' is not defined
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Could not create circuits. Some or all observables are not valid.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: module 'pennylane.operation' has no attribute 'Tensor'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: module 'pennylane.operation' has no attribute 'Tensor'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: 'Resources' object is not subscriptable
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: run_adapt_vqe.<locals>.final_circuit() takes 0 positional arguments but 1 was given
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: 'Resources' object is not subscriptable
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+pennylane.DeviceError: Device lightning.kokkos does not exist. Make sure the required plugin is installed.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: LightningKokkos.__init__() got an unexpected keyword argument 'parallel'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+pennylane.compiler.compiler.CompileError: The catalyst package is not installed.
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+NotImplementedError: Converting dtype('O') to a ctypes type
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.05
+Exit Code: 2
+LAST OUTPUT:
+experiment_driver.py: error: argument --optimizer: invalid choice: 'Adam' (choose from 'SPSA')
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: LightningKokkos.__init__() got an unexpected keyword argument 'parallel'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: LightningKokkos has no attribute 'num_wires'. You may be looking for a property or method present in the legacy device interface. Please consult the LightningKokkos documentation for an updated list of public properties and methods.. Did you mean: '_wires'?
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: LightningKokkos has no attribute 'num_wires'. You may be looking for a property or method present in the legacy device interface. Please consult the LightningKokkos documentation for an updated list of public properties and methods.. Did you mean: '_wires'?
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: LightningKokkos has no attribute 'num_wires'. You may be looking for a property or method present in the legacy device interface. Please consult the LightningKokkos documentation for an updated list of public properties and methods.. Did you mean: '_wires'?
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: operands could not be broadcast together with shapes (0,) (360,)
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: operands could not be broadcast together with shapes (0,) (360,)
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: operands could not be broadcast together with shapes (0,) (360,)
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: operands could not be broadcast together with shapes (0,) (360,)
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: 'Resources' object has no attribute 'gate_depth_types'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+TypeError: build_energy.<locals>._energy() takes 1 positional argument but 2 were given
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: build_energy.<locals>._energy() takes 1 positional argument but 2 were given
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: build_energy.<locals>._energy() takes 1 positional argument but 2 were given
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: build_energy.<locals>._energy() takes 1 positional argument but 2 were given
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: module 'pennylane' has no attribute 'COBYLAOptimizer'. Did you mean: 'QNSPSAOptimizer'?
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: module 'pennylane' has no attribute 'SciPyOptimizer'. Did you mean: 'SPSAOptimizer'?
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ImportError: cannot import name 'ScipyOptimizer' from 'pennylane.optimize' (/Users/omtailor/anaconda3/envs/asphalt-qchem-p3/lib/python3.11/site-packages/pennylane/optimize/__init__.py)
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+ImportError: cannot import name 'ScipyOptimizer' from 'pennylane.optimize' (/Users/omtailor/anaconda3/envs/asphalt-qchem-p3/lib/python3.11/site-packages/pennylane/optimize/__init__.py)
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: unhashable type: 'slice'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer SPSA --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer Adam --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer L-BFGS-B --lr 0.0
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer COBYLA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer COBYLA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer COBYLA --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer SPSA --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer Adam --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer Adam --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer L-BFGS-B --lr 0.0
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer COBYLA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer COBYLA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer COBYLA --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer SPSA --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer Adam --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer Adam --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer Adam --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer 1PH-SPSA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer 1PH-SPSA --lr 0.05
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer L-BFGS-B --lr 0.0
+Exit Code: 1
+LAST OUTPUT:
+SyntaxError: invalid syntax
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: run_adapt_vqe.<locals>.make_inner.<locals>.step_and_cost() missing 1 required positional argument: 'x0'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: module 'pennylane.templates' has no attribute 'UpCCGSD'. Did you mean: 'kUpCCGSD'?
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: kUpCCGSD.__init__() got an unexpected keyword argument 's_wires'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: excitations() got an unexpected keyword argument 'singles'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: kUpCCGSD.__init__() got an unexpected keyword argument 'excitations'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Weights tensor must be of shape (2, 168); got (2, 240).
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: kUpCCGSD.shape() missing 1 required positional argument: 'delta_sz'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: Elements of 'init_state' must be integers; got object
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: operands could not be broadcast together with shapes (2,168) (2,)
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz k-UpCCGSD --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+AttributeError: 'Resources' object has no attribute 'gate_depth_types'
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz HEA --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: operands could not be broadcast together with shapes (4,16,3) (4,)
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer 1PH-SPSA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+TypeError: 'OnePassHadamardSPSA' object is not callable
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer hqng-la --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+NameError: name 'eps' is not defined
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer hqng-la --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+NameError: name 'eps' is not defined
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.2
+Exit Code: 1
+LAST OUTPUT:
+ValueError: zero-size array to reduction operation maximum which has no identity
+--- FAILED CONFIGURATION ---
+Command: /Users/omtailor/anaconda3/envs/asphalt-qchem-p3/bin/python -u src/experiment_driver.py --ansatz ADAPT-VQE --optimizer COBYLA --lr 0.1
+Exit Code: 1
+LAST OUTPUT:
+ValueError: zero-size array to reduction operation maximum which has no identity
