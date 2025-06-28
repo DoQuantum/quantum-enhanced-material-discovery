@@ -3,9 +3,11 @@ from typing import Sequence
 import numpy as np
 
 # For circuit folding:
+from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 from qiskit.result import QuasiDistribution
 from qiskit_experiments.library.characterization import LocalReadoutError
+from qiskit_ibm_runtime import SamplerV2
 
 __all__ = ["ReadoutCal", "ZNE", "mitigate"]
 
@@ -35,14 +37,13 @@ class ReadoutCal:
 
 
 class ZNE:
-    """Zero-noise extrapolation via gate folding + Richardson polynomial fit."""
-
     scale_factors = (1, 3, 5)
 
     def fold(self, circuit: QuantumCircuit, scale: int) -> QuantumCircuit:
         if scale == 1:
             return circuit.copy()
-        folded = QuantumCircuit(circuit.num_qubits)
+        # Create new circuit inheriting registers
+        folded = circuit.copy_empty_like()
         for instr, qargs, cargs in circuit.data:
             folded.append(instr, qargs, cargs)
             if instr.name != "measure":
@@ -51,6 +52,7 @@ class ZNE:
                     folded.append(instr.inverse(), qargs, cargs)
         return folded
 
+
     def extrapolate(self, noisy_values: Sequence[float]) -> float:
         # Fit polynomial through (scale, noisy_value) points and evaluate at 0
         coeffs = np.polyfit(self.scale_factors, noisy_values, deg=len(noisy_values) - 1)
@@ -58,12 +60,26 @@ class ZNE:
 
 
 # --- Convenience function ---
-def mitigate(counts, cal: ReadoutCal, zne: ZNE) -> float:
-    qpd = cal.apply(counts)
-    exp0 = qpd.get(0, 0) + qpd.get(3, 0) - qpd.get(1, 0) - qpd.get(2, 0)
+def mitigate(original_circ, cal: ReadoutCal, zne: ZNE, backend) -> float:
+    # Make a clean base circuit with explicit measurement
+    base = original_circ.copy()
+    base.remove_final_measurements(inplace=True)  # remove any previous ones
+    base.measure_all()                           # add fresh ones
+    sampler = SamplerV2(mode=backend)
     noisy = []
-    for s in zne.scale_factors:
-        noisy.append(
-            exp0
-        )  # Replace this stub with actual folded evaluation in real use
+
+    for scale in zne.scale_factors:
+        circ_s = zne.fold(base, scale)
+        circ_t = transpile(circ_s, backend=backend)
+
+        job = sampler.run([circ_t], shots=cal.shots)
+        pub = job.result()[0]
+
+        # 🔍 Use .data.meas only—it will exist since we added measurements
+        counts = pub.data.meas.get_counts()
+        qpd = cal.apply(counts)
+
+        exp = qpd.get(0, 0) + qpd.get(3, 0) - qpd.get(1, 0) - qpd.get(2, 0)
+        noisy.append(exp)
+
     return zne.extrapolate(noisy)
