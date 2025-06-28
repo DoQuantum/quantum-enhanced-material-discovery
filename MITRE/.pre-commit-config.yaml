@@ -11,7 +11,6 @@ repos:
     hooks:
     -   id: isort
         exclude: ^MITRE/legacy/
-        args: ["--line-length", "0"]  # Disable line length enforcement
 
 -   repo: https://github.com/PyCQA/flake8
     rev: 7.1.0

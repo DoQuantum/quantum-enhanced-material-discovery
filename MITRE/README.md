@@ -31,3 +31,27 @@ To reproduce the core results of this project, run the main experiment script (t
 # Example command
 python src/run_experiment.py
 ```
+
+## Noise Mitigation
+
+Combine measurement error calibration and zero-noise extrapolation:
+
+```python
+from src.mitigation import ReadoutCal, ZNE, mitigate
+from qiskit_ibm_runtime.fake_provider import FakePerth
+from qiskit import QuantumCircuit
+
+backend = FakePerth()
+bell = QuantumCircuit(2)
+bell.h(0); bell.cx(0, 1); bell.measure_all()
+
+cal = ReadoutCal([0, 1], backend, shots=8192)
+cal.fit()
+
+raw_counts = backend.run(bell).result().get_counts()
+zne = ZNE()
+zz = mitigate(raw_counts, cal, zne)
+
+print("Mitigated ⟨Z⊗Z⟩:", zz)
+```
+

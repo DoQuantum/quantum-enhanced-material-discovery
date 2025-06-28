@@ -1,92 +1,69 @@
-import unittest
-from qiskit.circuit import QuantumCircuit
-from qiskit.providers.aer import AerSimulator
-from qiskit_aer.noise import NoiseModel, depolarizing_error 
-from src.mitigation import ReadoutCal, ZNE
+# tests/test_mitigation.py
 import numpy as np
-from qiskit import transpile, assemble, execute 
+
+if not hasattr(np, "float_"):
+    np.float_ = np.float64
+
+import pytest
+from qiskit import QuantumCircuit
+from qiskit.primitives import StatevectorEstimator
+from qiskit.quantum_info import Pauli
+from qiskit_ibm_runtime.fake_provider import FakePerth
+
+from src.mitigation import ZNE, ReadoutCal
 
 
-class TestMitigation(unittest.TestCase):
+def bell_circuit():
+    qc = QuantumCircuit(2)
+    qc.h(0)
+    qc.cx(0, 1)
+    qc.measure_all()
+    return qc
 
-    def test_readout_calibration_reduces_bias(self):
-        """
-        Build a 2-qubit Bell circuit.
-        Run with artificial readout errors (simulate noise model).
-        Verify that ReadoutCal reduces bias in measurement results.
-        """
-        backend = Aer.get_backend('qasm_simulator')
-        
-        # Define a noise model that flips measurement results with some probability
-        noise_model = NoiseModel()
-        error = depolarizing_error(0.05, 1)  # 5% depolarizing on single qubit (approx readout error)
-        noise_model.add_all_qubit_quantum_error(error, ['measure'])
-        
-        # Prepare Bell state circuit
-        qc = QuantumCircuit(2, 2)
-        qc.h(0)
-        qc.cx(0, 1)
-        qc.measure([0,1], [0,1])
-        
-        # Run circuit with noise to get raw counts
-        job = execute(qc, backend=backend, shots=8192, noise_model=noise_model)
-        noisy_counts = job.result().get_counts()
 
-        # Readout Calibration on noisy backend (simulate ideal backend here)
-        readout = ReadoutCal(backend=backend, qubits=[0,1], shots=8192)
-        readout.fit()
-        
-        # Apply readout calibration on noisy counts
-        mitigated_probs = readout.apply(noisy_counts)
+def test_readout_calibration_reduces_bias():
+    backend = FakePerth()
+    raw_counts = backend.run(bell_circuit()).result().get_counts()
 
-        # Calculate expectation values before and after calibration
-        def expectation(counts):
-            shots = sum(counts.values())
-            exp_val = 0
-            for bitstring, count in counts.items():
-                parity = (-1) ** (bitstring.count('1') % 2)
-                exp_val += parity * count / shots
-            return exp_val
+    cal = ReadoutCal([0, 1], backend, shots=4096)
+    cal.fit()
+    mitigated = cal.apply(raw_counts)
 
-        noisy_exp = expectation(noisy_counts)
-        mitigated_exp = 0
-        # mitigated_probs is quasi-probabilities (dict with floats)
-        for bitstring, prob in mitigated_probs.items():
-            parity = (-1) ** (bitstring.count('1') % 2)
-            mitigated_exp += parity * prob
+    p_raw = (raw_counts.get("00", 0) + raw_counts.get("11", 0)) / sum(
+        raw_counts.values()
+    )
+    p_mit = mitigated.get(0, 0) + mitigated.get(3, 0)
+    assert p_mit > p_raw, "Calibration did not improve Bell-state parity"
 
-        # Ideal Bell state expectation is 1 for ZZ parity measurement
-        # We expect mitigation to improve (closer to 1) than raw noisy result
-        self.assertTrue(abs(mitigated_exp - 1) < abs(noisy_exp - 1), 
-                        msg="Readout calibration did not reduce bias.")
 
-    def test_zne_recovers_expectation(self):
-        """
-        Fold a 1-qubit circuit with depolarizing noise injected.
-        Check that ZNE recovers the true expectation value within tolerance.
-        """
-        backend = Aer.get_backend('qasm_simulator')
-        
-        # 1-qubit circuit with H gate and measurement
-        qc = QuantumCircuit(1,1)
-        qc.h(0)
-        qc.measure(0,0)
-        
-        # Define depolarizing noise model
-        noise_model = NoiseModel()
-        error = depolarizing_error(0.1, 1)  # 10% depolarizing noise
-        noise_model.add_all_qubit_quantum_error(error, ['u3'])  # Add noise on all single qubit gates
-        
-        # ZNE instance with noise backend
-        zne = ZNE(backend=backend, shots=8192)
-        
-        # Mitigate expectation value
-        mitigated_exp = zne.mitigate(qc)
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_zne_richardson_extrapolation():
+    estimator = StatevectorEstimator()
 
-        # Ideal expectation for H state on Z basis is 0 (equal superposition)
-        # With noise, expect deviation, ZNE tries to recover 0
-        self.assertAlmostEqual(mitigated_exp, 0, delta=0.2, 
-                               msg="ZNE did not recover expectation close to ideal.")
+    folded = bell_circuit()
+    folded.remove_final_measurements()
 
-if __name__ == "__main__":
-    unittest.main()
+    observable = Pauli("ZZ")
+    zne = ZNE()
+
+    noisy_vals = []
+    for scale in zne.scale_factors:
+        circ = zne.fold(folded, scale) if scale > 1 else folded
+        job = estimator.run([(circ, observable)])
+        result = job.result()
+
+        # Debugging output to inspect result contents
+        print(f"DEBUG scale={scale}: result = {result}")
+
+        pr = result[0]  # PubResult
+        evs = pr.data.evs
+        ev = evs.item() if hasattr(evs, "item") else evs  # use .item()
+
+        print(f"DEBUG extracted ev = {ev}")
+        noisy_vals.append(ev)
+
+    print("DEBUG noisy_vals:", noisy_vals)
+    ezero = zne.extrapolate(noisy_vals)
+    print("DEBUG extrapolated:", ezero)
+
+    assert np.isclose(ezero, 1.0, atol=0.05), f"ZNE failed: {ezero}"

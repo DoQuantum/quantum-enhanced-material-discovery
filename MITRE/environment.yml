@@ -5,7 +5,9 @@ dependencies:
   - python=3.11
   - pip
   - pennylane>=0.34.0
-  - qiskit
+  - qiskit>=2.0                 # pulls in terra, aer, primitives, etc.
+  - qiskit-experiments>=0.11.0  # latest calibration tools :contentReference[oaicite:1]{index=1}
+  - qiskit-ibm-runtime>=0.40.1  # provides FakePerth and primitives :contentReference[oaicite:2]{index=2}
   - matplotlib
   - pandas
   - scipy
