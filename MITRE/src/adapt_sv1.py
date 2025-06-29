@@ -69,8 +69,8 @@ def make_device(n_qubits: int):
     print(f"  • n_qubits wires : {n_qubits}")
 
     dev = qml.device(
-        "braket.aws.qubit",  # PennyLane-Braket backend:contentReference[oaicite:1]{index=1}
-        device_arn=sv1.id,  # ARN exposed as .id:contentReference[oaicite:2]{index=2}
+        "braket.aws.qubit",
+        device_arn=sv1.id,
         s3_destination_folder=(bucket, s3_prefix),
         wires=n_qubits,
         shots=0,  # analytic expectations
