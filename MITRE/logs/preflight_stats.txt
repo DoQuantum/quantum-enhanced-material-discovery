@@ -1,0 +1,19 @@
+cx: 4
+x: 8
+h: 8
+tdg: 4
+s: 4
+sdg: 4
+t: 4
+rz: 2
+ry: 2
+measure: 16
+
+1‑qubit gates: 28
+2‑qubit gates (CNOTs): 4
+Circuit depth: 11
+# Calibration circuits
+Calibration circuits: 2
+Shots per circuit: 1024
+Total calibration shots: 2048
+Estimated credit cost: 2048
