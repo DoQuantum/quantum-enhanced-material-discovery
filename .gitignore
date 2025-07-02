@@ -1,5 +1,6 @@
 pyscf/outputs/*.npy
 venv/
+.venv/
 
 pycache/
 __pycache__/
